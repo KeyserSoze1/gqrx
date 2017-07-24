@@ -203,6 +203,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     connect(uiDockRxOpt, SIGNAL(fmEmphSelected(double)), this, SLOT(setFmEmph(double)));
     connect(uiDockRxOpt, SIGNAL(amDcrToggled(bool)), this, SLOT(setAmDcr(bool)));
     connect(uiDockRxOpt, SIGNAL(cwOffsetChanged(int)), this, SLOT(setCwOffset(int)));
+    connect(uiDockRxOpt, SIGNAL(nrsc5ProgramChanged(int)), this, SLOT(setNrsc5Program(int)));
     connect(uiDockRxOpt, SIGNAL(agcToggled(bool)), this, SLOT(setAgcOn(bool)));
     connect(uiDockRxOpt, SIGNAL(agcHangToggled(bool)), this, SLOT(setAgcHang(bool)));
     connect(uiDockRxOpt, SIGNAL(agcThresholdChanged(int)), this, SLOT(setAgcThreshold(int)));
@@ -1079,6 +1080,13 @@ void MainWindow::selectDemod(int mode_idx)
         click_res = 10;
         break;
 
+    case DockRxOpt::MODE_NRSC5:
+        rx->set_demod(receiver::RX_DEMOD_NRSC5);
+        ui->plotter->setDemodRanges(0, 5000, 100, 40000, false);
+        uiDockAudio->setFftRange(0,3000);
+        click_res = 100;
+        break;
+
     default:
         qDebug() << "Unsupported mode selection (can't happen!): " << mode_idx;
         flo = -5000;
@@ -1142,6 +1150,11 @@ void MainWindow::setAmDcr(bool enabled)
 void MainWindow::setCwOffset(int offset)
 {
     rx->set_cw_offset(offset);
+}
+
+void MainWindow::setNrsc5Program(int program)
+{
+    rx->set_nrsc5_program(program);
 }
 
 /**

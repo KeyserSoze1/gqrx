@@ -156,6 +156,16 @@ double CDemodOptions::getEmph(void) const
     return tau_from_index(ui->emphSelector->currentIndex());
 }
 
+void CDemodOptions::setProgram(int program)
+{
+    ui->nrsc5ProgramSpin->setValue(program);
+}
+
+int CDemodOptions::getProgram(void) const
+{
+    return ui->nrsc5ProgramSpin->value();
+}
+
 void CDemodOptions::on_maxdevSelector_activated(int index)
 {
     emit fmMaxdevSelected(maxdev_from_index(index));
@@ -174,4 +184,9 @@ void CDemodOptions::on_dcrCheckBox_toggled(bool checked)
 void CDemodOptions::on_cwOffsetSpin_valueChanged(int value)
 {
     emit cwOffsetChanged(value);
+}
+
+void CDemodOptions::on_nrsc5ProgramSpin_valueChanged(int value)
+{
+    emit nrsc5ProgramChanged(value);
 }

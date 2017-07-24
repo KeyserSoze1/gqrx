@@ -146,6 +146,7 @@ private slots:
     void setFmEmph(double tau);
     void setAmDcr(bool enabled);
     void setCwOffset(int offset);
+    void setNrsc5Program(int program);
     void setAgcOn(bool agc_on);
     void setAgcHang(bool use_hang);
     void setAgcThreshold(int threshold);

@@ -46,7 +46,8 @@ public:
         PAGE_FM_OPT = 1,
         PAGE_AM_OPT = 2,
         PAGE_CW_OPT = 3,
-        PAGE_NUM    = 4
+        PAGE_NRSC5_OPT = 4,
+        PAGE_NUM    = 5
     };
 
     explicit CDemodOptions(QWidget *parent = 0);
@@ -66,6 +67,9 @@ public:
     void setEmph(double tau);
     double getEmph(void) const;
 
+    void setProgram(int program);
+    int getProgram(void) const;
+
 signals:
     /*! \brief Signal emitted when new FM deviation is selected. */
     void fmMaxdevSelected(float max_dev);
@@ -79,11 +83,15 @@ signals:
     /*! \brief CW offset changed. */
     void cwOffsetChanged(int offset);
 
+    /*! \brief NRSC5 program changed. */
+    void nrsc5ProgramChanged(int program);
+
 private slots:
     void on_maxdevSelector_activated(int index);
     void on_emphSelector_activated(int index);
     void on_dcrCheckBox_toggled(bool checked);
     void on_cwOffsetSpin_valueChanged(int value);
+    void on_nrsc5ProgramSpin_valueChanged(int value);
 
 private:
     Ui::CDemodOptions *ui;

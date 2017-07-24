@@ -40,6 +40,7 @@
 #include "dsp/filter/fir_decim.h"
 #include "dsp/rx_fft.h"
 #include "receivers/nbrx.h"
+#include "receivers/nrsc5rx.h"
 #include "receivers/wfmrx.h"
 
 #ifdef WITH_PULSEAUDIO
@@ -891,6 +892,10 @@ receiver::status receiver::set_demod(rx_demod demod)
         connect_all(RX_CHAIN_NBRX);
         rx->set_demod(nbrx::NBRX_DEMOD_SSB);
         break;
+    
+    case RX_DEMOD_NRSC5:
+        connect_all(RX_CHAIN_NRSC5);
+        break;
 
     default:
         ret = STATUS_ERROR;
@@ -942,6 +947,13 @@ receiver::status receiver::set_af_gain(float gain_db)
     //std::cout << "G:" << gain_db << "dB / K:" << k << std::endl;
     audio_gain0->set_k(k);
     audio_gain1->set_k(k);
+
+    return STATUS_OK;
+}
+
+receiver::status receiver::set_nrsc5_program(int program)
+{
+    rx->set_demod(program);
 
     return STATUS_OK;
 }
@@ -1353,6 +1365,33 @@ void receiver::connect_all(rx_chain type)
         tb->connect(rx, 1, audio_gain1, 0);
         tb->connect(audio_gain0, 0, audio_snk, 0);
         tb->connect(audio_gain1, 0, audio_snk, 1);
+        break;
+
+    case RX_CHAIN_NRSC5:
+        if (rx->name() != "NRSC5RX")
+        {
+            rx.reset();
+            rx = make_nrsc5rx(d_quad_rate, 0);
+        }
+        if (d_decim >= 2)
+        {
+            tb->connect(src, 0, input_decim, 0);
+            tb->connect(input_decim, 0, iq_swap, 0);
+        }
+        else
+        {
+            tb->connect(src, 0, iq_swap, 0);
+        }
+        if (d_dc_cancel)
+        {
+            tb->connect(iq_swap, 0, dc_corr, 0);
+            tb->connect(dc_corr, 0, iq_fft, 0);
+        }
+        else
+        {
+            tb->connect(iq_swap, 0, iq_fft, 0);
+        }
+        tb->connect(iq_swap, 0, rx, 0);
         break;
 
     default:

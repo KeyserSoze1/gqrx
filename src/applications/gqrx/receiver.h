@@ -88,14 +88,16 @@ public:
         RX_DEMOD_WFM_M = 4,  /*!< Frequency modulation (wide, mono). */
         RX_DEMOD_WFM_S = 5,  /*!< Frequency modulation (wide, stereo). */
         RX_DEMOD_WFM_S_OIRT = 6,  /*!< Frequency modulation (wide, stereo oirt). */
-        RX_DEMOD_SSB   = 7   /*!< Single Side Band. */
+        RX_DEMOD_SSB   = 7,   /*!< Single Side Band. */
+        RX_DEMOD_NRSC5 = 8 /*!< NRSC5 (HD Radio). */
     };
 
     /** Supported receiver types. */
     enum rx_chain {
         RX_CHAIN_NONE  = 0,   /*!< No receiver, just spectrum analyzer. */
         RX_CHAIN_NBRX  = 1,   /*!< Narrow band receiver (AM, FM, SSB). */
-        RX_CHAIN_WFMRX = 2    /*!< Wide band FM receiver (for broadcast). */
+        RX_CHAIN_WFMRX = 2,   /*!< Wide band FM receiver (for broadcast). */
+        RX_CHAIN_NRSC5 = 3    /*!< NRSC5 HD Radio. */
     };
 
     /** Filter shape (convenience wrappers for "transition width"). */
@@ -188,6 +190,8 @@ public:
 
     /* AM parameters */
     status      set_am_dcr(bool enabled);
+
+    status      set_nrsc5_program(int program);
 
     /* Audio parameters */
     status      set_af_gain(float gain_db);

@@ -75,7 +75,8 @@ public:
         MODE_CWL        = 8, /*!< CW using LSB filter. */
         MODE_CWU        = 9, /*!< CW using USB filter. */
         MODE_WFM_STEREO_OIRT = 10, /*!< Broadcast FM (stereo oirt). */
-        MODE_LAST       = 11
+        MODE_NRSC5      = 11, /*!< HD Radio */
+        MODE_LAST       = 12
     };
 
     explicit DockRxOpt(qint64 filterOffsetRange = 90000, QWidget *parent = 0);
@@ -177,6 +178,8 @@ signals:
 
     void cwOffsetChanged(int offset);
 
+    void nrsc5ProgramChanged(int program);
+
 private slots:
     void on_freqSpinBox_valueChanged(double freq);
     void on_filterFreq_newFrequency(qint64 freq);
@@ -201,6 +204,7 @@ private slots:
     void demodOpt_fmEmphSelected(double tau);
     void demodOpt_amDcrToggled(bool enabled);
     void demodOpt_cwOffsetChanged(int offset);
+    void demodOpt_nrsc5ProgramChanged(int program);
 
     // Signals coming from AGC options popup
     void agcOpt_hangToggled(bool checked);

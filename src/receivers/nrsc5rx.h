@@ -45,6 +45,14 @@ typedef boost::shared_ptr<nrsc5rx> nrsc5rx_sptr;
 /*! \brief Public constructor of nrsc5rx. */
 nrsc5rx_sptr make_nrsc5rx(float quad_rate, int channel);
 
+struct HdRdsData
+{
+    std::string station_name;
+    std::string artist_name;
+    std::string song_name;
+    pthread_mutex_t mutex;
+};
+
 /*! \brief iBiquity iBOC receiver.
  *  \ingroup RX
  *
@@ -70,6 +78,11 @@ public:
 
     virtual void set_demod(int demod);
 
+    void get_rds_data(std::string &outbuff, int &num);
+    void start_rds_decoder();
+    void stop_rds_decoder();
+    bool is_rds_decoder_active();
+
 private:
     bool   d_running;          /*!< Whether receiver is running or not. */
     float  d_quad_rate;        /*!< Input sample rate. */
@@ -91,7 +104,10 @@ private:
     gr::blocks::file_sink::sptr file_sink;
 
     rx_meter_c_sptr           meter;     /*!< Signal strength. */
+    bool                      rds_enabled;
+    pthread_t listen_thread;
 
+    HdRdsData   rds_data;
 };
 
 #endif // NRSC5RX_H

@@ -31,6 +31,73 @@
 #define TEMP_PIPE "/tmp/gqrx_nrsc5.sock"
 #define SERVER "127.0.0.1"
 #define PORT 8888   //The port on which to send data
+#define BUFLEN 1024 //Max length of buffer
+
+void *msg_listener(void *input)
+{
+    HdRdsData *rx = (HdRdsData*)input;
+    struct sockaddr_in si_me, si_other;
+     
+    int s, recv_len;
+    unsigned int slen = sizeof(si_other);
+    char buf[BUFLEN];
+     
+    //create a UDP socket
+    if ((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+    {
+        printf("Unable to create UDP Socket.\n");
+        exit(1);
+    }
+     
+    // zero out the structure
+    memset((char *) &si_me, 0, sizeof(si_me));
+     
+    si_me.sin_family = AF_INET;
+    si_me.sin_port = htons(8889);
+    si_me.sin_addr.s_addr = htonl(INADDR_ANY);
+     
+    //bind socket to port
+    if( bind(s , (struct sockaddr*)&si_me, sizeof(si_me) ) == -1)
+    {
+        printf("Unable to bind to UDP port.\n");
+        exit(1);
+    }
+
+    //keep listening for data
+    while(1)
+    {    
+        //try to receive some data, this is a blocking call
+        if ((recv_len = recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen)) == -1)
+        {
+            //printf("No data received.\n");
+        }
+         
+        if (recv_len > 1)
+            continue;
+
+        pthread_mutex_lock(&rx->mutex);
+        if (buf[0] == 0)
+        {
+            rx->station_name.clear();
+            std::copy(buf+1,buf+recv_len,std::back_inserter(rx->station_name));
+        }
+        if (buf[0] == 1)
+        {
+            rx->artist_name.clear();
+            std::copy(buf+1,buf+recv_len,std::back_inserter(rx->artist_name));
+        }
+        if (buf[0] == 2)
+        {
+            rx->song_name.clear();
+            std::copy(buf+1,buf+recv_len,std::back_inserter(rx->song_name));
+        }
+        pthread_mutex_unlock(&rx->mutex);
+    }
+ 
+    close(s);
+
+    exit(0);
+}
 
 nrsc5rx_sptr make_nrsc5rx(float quad_rate, int channel)
 {
@@ -66,7 +133,7 @@ nrsc5rx::nrsc5rx(float quad_rate, int channel)
     d_nrsc5_pid = fork();
     if(d_nrsc5_pid == 0) 
     {
-        execl("/home/jason/Projects/nrsc5/build/src/nrsc5", "/home/jason/Projects/nrsc5/build/src/nrsc5", "-r", TEMP_PIPE, std::to_string(channel).c_str(), (char*)0);
+        execl("/home/jason/nrsc5/build/src/nrsc5", "/home/jason/nrsc5/build/src/nrsc5", "-r", TEMP_PIPE, std::to_string(channel).c_str(), (char*)0);
         exit(1);
     }
 
@@ -88,10 +155,13 @@ nrsc5rx::nrsc5rx(float quad_rate, int channel)
 
     connect(iq_resamp, 0, self(), 0);
     connect(iq_resamp, 0, self(), 1);
+    rds_enabled = false;
+    pthread_mutex_init(&rds_data.mutex, NULL);
 }
 
 nrsc5rx::~nrsc5rx()
 {
+    pthread_mutex_destroy(&rds_data.mutex);
 }
 
 bool nrsc5rx::start()
@@ -176,4 +246,49 @@ void nrsc5rx::set_demod(int channel)
     sendto(s, &program, 1 , 0 , (struct sockaddr *) &si_other, slen);
  
     close(s);
+}
+
+void nrsc5rx::get_rds_data(std::string &outbuff, int &num)
+{
+    pthread_mutex_lock(&rds_data.mutex);
+    if (!rds_data.station_name.empty())
+    {
+        num = 1;
+        outbuff = rds_data.station_name;
+        rds_data.station_name.clear();
+    }
+    else if (!rds_data.song_name.empty())
+    {
+        num = 4;
+        outbuff = rds_data.song_name;
+        rds_data.song_name.clear();
+    }
+    else if (!rds_data.artist_name.empty())
+    {
+        num = 2;
+        outbuff = rds_data.artist_name;
+        rds_data.artist_name.clear();
+    }
+    else
+    {
+        num = -1;
+    }
+    pthread_mutex_unlock(&rds_data.mutex);
+}
+
+void nrsc5rx::start_rds_decoder()
+{
+    pthread_create(&listen_thread, NULL, &msg_listener, &rds_data);
+    rds_enabled=true;
+}
+
+void nrsc5rx::stop_rds_decoder()
+{
+    pthread_cancel(listen_thread);
+    rds_enabled=false;
+}
+
+bool nrsc5rx::is_rds_decoder_active()
+{
+    return rds_enabled;
 }

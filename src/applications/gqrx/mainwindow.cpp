@@ -1085,6 +1085,9 @@ void MainWindow::selectDemod(int mode_idx)
         ui->plotter->setDemodRanges(0, 5000, 100, 40000, false);
         uiDockAudio->setFftRange(0,3000);
         click_res = 100;
+        uiDockRDS->setEnabled();
+        if (rds_enabled)
+            setRdsDecoder(true);
         break;
 
     default:
